@@ -12,12 +12,10 @@ namespace ACTIVITY8List.Pages
             _logger = logger;
         }
 
-        // List of Person objects
-        public List<Person>? People { get; set; } = new List<Person>();
+        public List<Person> People { get; set; }
 
-        public void OnGet()
+        public void OnGet(string? sortBy = null, string? sortAsc = "true")
         {
-            // Initialize list of people
             People = new List<Person>()
             {
                 new Person() {
@@ -81,14 +79,29 @@ namespace ACTIVITY8List.Pages
                     EmailAddress = "jenna@example.com"
                 }
             };
+
+            if (sortBy == null || sortAsc == null)
+            {
+                return;
+            }
+
+            bool ascending = sortAsc.ToLower() == "true";
+            People = sortBy.ToLower() switch
+            {
+                "name" => ascending ? People.OrderBy(p => p.Name).ToList() : People.OrderByDescending(p => p.Name).ToList(),
+                "age" => ascending ? People.OrderBy(p => p.Age).ToList() : People.OrderByDescending(p => p.Age).ToList(),
+                "gender" => ascending ? People.OrderBy(p => p.Gender).ToList() : People.OrderByDescending(p => p.Gender).ToList(),
+                "emailaddress" => ascending ? People.OrderBy(p => p.EmailAddress).ToList() : People.OrderByDescending(p => p.EmailAddress).ToList(),
+                _ => People
+            };
         }
 
         public class Person
         {
-            public string Name { get; set; } = string.Empty;
+            public string Name { get; set; }
             public int Age { get; set; }
-            public string Gender { get; set; } = string.Empty;
-            public string EmailAddress { get; set; } = string.Empty;
+            public string Gender { get; set; }
+            public string EmailAddress { get; set; }
         }
     }
 }
