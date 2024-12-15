@@ -12,10 +12,23 @@ namespace ACTIVITY8List.Pages
             _logger = logger;
         }
 
-        public List<Person> People { get; set; }
+        public List<Person> People { get; set; } = new();
+        [BindProperty]
+        public SearchParameters? SearchParams { get; set; }
 
-        public void OnGet(string? sortBy = null, string? sortAsc = "true")
+        public void OnGet(string? keyword = "", string? searchBy = "", string? sortBy = null, string? sortAsc = "true")
         {
+            if (SearchParams == null)
+            {
+                SearchParams = new SearchParameters
+                {
+                    SearchBy = searchBy,
+                    Keyword = keyword,
+                    SortBy = sortBy,
+                    SortAsc = sortAsc?.ToLower() == "true"
+                };
+            }
+
             People = new List<Person>()
             {
                 new Person() {
@@ -80,28 +93,46 @@ namespace ACTIVITY8List.Pages
                 }
             };
 
-            if (sortBy == null || sortAsc == null)
+            if (!string.IsNullOrEmpty(SearchParams.SearchBy) && !string.IsNullOrEmpty(SearchParams.Keyword))
             {
-                return;
+                People = SearchParams.SearchBy.ToLower() switch
+                {
+                    "name" => People.Where(p => p.Name.Contains(SearchParams.Keyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                    "age" => People.Where(p => p.Age.ToString().Contains(SearchParams.Keyword)).ToList(),
+                    "gender" => People.Where(p => p.Gender.Contains(SearchParams.Keyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                    "emailaddress" => People.Where(p => p.EmailAddress.Contains(SearchParams.Keyword, StringComparison.OrdinalIgnoreCase)).ToList(),
+                    _ => People
+                };
             }
 
-            bool ascending = sortAsc.ToLower() == "true";
-            People = sortBy.ToLower() switch
+            if (!string.IsNullOrEmpty(SearchParams.SortBy))
             {
-                "name" => ascending ? People.OrderBy(p => p.Name).ToList() : People.OrderByDescending(p => p.Name).ToList(),
-                "age" => ascending ? People.OrderBy(p => p.Age).ToList() : People.OrderByDescending(p => p.Age).ToList(),
-                "gender" => ascending ? People.OrderBy(p => p.Gender).ToList() : People.OrderByDescending(p => p.Gender).ToList(),
-                "emailaddress" => ascending ? People.OrderBy(p => p.EmailAddress).ToList() : People.OrderByDescending(p => p.EmailAddress).ToList(),
-                _ => People
-            };
+                bool ascending = SearchParams.SortAsc.GetValueOrDefault();
+                People = SearchParams.SortBy.ToLower() switch
+                {
+                    "name" => ascending ? People.OrderBy(p => p.Name).ToList() : People.OrderByDescending(p => p.Name).ToList(),
+                    "age" => ascending ? People.OrderBy(p => p.Age).ToList() : People.OrderByDescending(p => p.Age).ToList(),
+                    "gender" => ascending ? People.OrderBy(p => p.Gender).ToList() : People.OrderByDescending(p => p.Gender).ToList(),
+                    "emailaddress" => ascending ? People.OrderBy(p => p.EmailAddress).ToList() : People.OrderByDescending(p => p.EmailAddress).ToList(),
+                    _ => People
+                };
+            }
         }
 
         public class Person
         {
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
             public int Age { get; set; }
-            public string Gender { get; set; }
-            public string EmailAddress { get; set; }
+            public string Gender { get; set; } = string.Empty;
+            public string EmailAddress { get; set; } = string.Empty;
+        }
+
+        public class SearchParameters
+        {
+            public string? SearchBy { get; set; }
+            public string? Keyword { get; set; }
+            public string? SortBy { get; set; }
+            public bool? SortAsc { get; set; }
         }
     }
 }
