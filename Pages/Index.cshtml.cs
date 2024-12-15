@@ -13,11 +13,19 @@ namespace ACTIVITY8List.Pages
         }
 
         public List<Person> People { get; set; } = new();
+        public int TotalPages { get; set; }
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 5;
+
         [BindProperty]
         public SearchParameters? SearchParams { get; set; }
 
-        public void OnGet(string? keyword = "", string? searchBy = "", string? sortBy = null, string? sortAsc = "true")
+        public void OnGet(string? keyword = "", string? searchBy = "", string? sortBy = null, string? sortAsc = "true", int page = 1)
         {
+            // Set the current page
+            CurrentPage = page;
+
+            // Initialize search parameters
             if (SearchParams == null)
             {
                 SearchParams = new SearchParameters
@@ -93,6 +101,7 @@ namespace ACTIVITY8List.Pages
                 }
             };
 
+            // Filtering based on search
             if (!string.IsNullOrEmpty(SearchParams.SearchBy) && !string.IsNullOrEmpty(SearchParams.Keyword))
             {
                 People = SearchParams.SearchBy.ToLower() switch
@@ -105,6 +114,7 @@ namespace ACTIVITY8List.Pages
                 };
             }
 
+            // Sorting based on the selected column
             if (!string.IsNullOrEmpty(SearchParams.SortBy))
             {
                 bool ascending = SearchParams.SortAsc.GetValueOrDefault();
@@ -117,6 +127,10 @@ namespace ACTIVITY8List.Pages
                     _ => People
                 };
             }
+
+            // Paging: Get the page of people to show
+            TotalPages = (int)Math.Ceiling(People.Count / (double)PageSize);
+            People = People.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
         }
 
         public class Person
@@ -135,4 +149,5 @@ namespace ACTIVITY8List.Pages
             public bool? SortAsc { get; set; }
         }
     }
+
 }
